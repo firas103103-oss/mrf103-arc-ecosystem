@@ -20,12 +20,15 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 
 # Build both client and server
-RUN npm run build:client && npm run build:server
+RUN npm run build
 
 # Production stage
 FROM node:20-slim
 
 WORKDIR /app
+
+# Install serve for static files
+RUN npm install -g serve
 
 # Copy package files
 COPY package*.json ./
@@ -40,7 +43,7 @@ COPY --from=builder /app/dist ./dist
 EXPOSE $PORT
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=15s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=15s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||5000)+'/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Start the service
